@@ -1,0 +1,368 @@
+import { useState } from 'react';
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { ArrowRight, ChevronDown } from 'lucide-react';
+import { Link } from 'react-router';
+import { toast } from 'react-toastify';
+import SocialIcons from '../ui/SocialIcons/SocialIcons';
+// eslint-disable-next-line no-unused-vars
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+
+const customerCare = [
+  { name: 'My Account', href: '/login' },
+  { name: 'My Orders', href: '/login' },
+  { name: 'Email Support', href: 'mailto:info@opencodechicago.org' },
+  { name: 'Call Support', href: 'tel:+13125551234' },
+];
+
+const information = [
+  { name: 'Shipping Policy', href: '/shipping-policy' },
+  { name: 'Return Policy', href: '/return-policy' },
+  { name: 'Privacy Policy', href: '/privacy-policy' },
+  { name: 'Accessibility', href: '/accessibility' },
+  { name: 'Terms of Service', href: '/terms-of-service' },
+];
+
+export default function TopFooter() {
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState('idle'); // 'idle' | 'loading' | 'success'
+  const isAuthenticated = useSelector((s) => s.auth?.isAuthenticated);
+  const navigate = useNavigate();
+
+  // Mobile accordion state — default to opened
+  const [customerOpen, setCustomerOpen] = useState(true);
+  const [infoOpen, setInfoOpen] = useState(true);
+  // framer motion variants
+  const listVariants = {
+    open: { transition: { staggerChildren: 0.06, delayChildren: 0.04 } },
+    closed: { transition: { staggerChildren: 0.02, staggerDirection: -1 } },
+  };
+  const itemVariants = {
+    open: { opacity: 1, y: 0 },
+    closed: { opacity: 0, y: 6 },
+  };
+  const shouldReduceMotion = useReducedMotion();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+
+    if (!isValidEmail) {
+      toast.error('Please enter a valid email address.');
+      return;
+    }
+
+    setStatus('loading');
+
+    try {
+      // Simulate API call
+      await new Promise((res) => setTimeout(res, 2000));
+
+      toast.success(
+        'Thank you for subscribing! Your email has been received. You’ll now get our latest deals and discounts.'
+      );
+
+      setStatus('success');
+      setEmail('');
+
+      // Reset back to normal button after 2 seconds
+      setTimeout(() => setStatus('idle'), 2000);
+    } catch (error) {
+      console.error(error);
+      toast.error('Something went wrong. Please try again.');
+      setStatus('idle');
+    }
+  };
+
+  return (
+    <footer className="bg-neutral-900 text-neutral-200 px-5 md:px-0 py-12 ">
+      <div className="max-w-7xl mx-auto flex flex-col gap-12 md:flex-row">
+        <div className="flex flex-col md:flex-row gap-12 md:gap-2 justify-between md:w-[50%]">
+          {/* Logo + Address */}
+          <div className="flex flex-col gap-[24px]">
+            <Link
+              to="/"
+              className="inline-block"
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            >
+              <img
+                src=""
+                alt="Logo"
+                className="w-32"
+              />
+            </Link>
+            <SocialIcons />
+            <address className="hover:underline cursor-pointer not-italic text-m leading-relaxed">
+              <span className="md:block">Address </span> 
+            </address>
+          </div>
+
+          {/* Navigation Links */}
+          <nav className="grid md:grid-cols-2 md:gap-12 text-m border border-neutral-700 rounded-lg md:border-0 md:rounded-none">
+            {/* Customer Care (accordion on mobile) */}
+            <div className="w-full flex flex-col p-5 md:p-0">
+              <button
+                type="button"
+                onClick={() => setCustomerOpen((s) => !s)}
+                aria-expanded={customerOpen}
+                className="w-full flex items-center justify-between md:justify-start gap-3 md:cursor-default"
+              >
+                <h3 className="font-semibold text-white text-left">
+                  Customer Care
+                </h3>
+                {/* chevron only visible on mobile */}
+                <ChevronDown
+                  className={`md:hidden transition-transform duration-200 ${customerOpen ? 'rotate-180' : 'rotate-0'}`}
+                  aria-hidden="true"
+                  size={18}
+                />
+              </button>
+
+              {/* Mobile animated wrapper + staggered items */}
+              <div className="md:hidden">
+                <AnimatePresence initial={false}>
+                  {customerOpen && (
+                    <motion.div
+                      key="customer-wrap"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={
+                        shouldReduceMotion
+                          ? { duration: 0 }
+                          : { duration: 0.36, ease: [0.2, 0.9, 0.2, 1] }
+                      }
+                      style={{ overflow: 'hidden' }}
+                      aria-hidden={!customerOpen}
+                    >
+                      <motion.ul
+                        initial="closed"
+                        animate="open"
+                        exit="closed"
+                        variants={listVariants}
+                        className="flex flex-col gap-2 mt-4 md:mt-0"
+                      >
+                        {customerCare.map((link) => (
+                          <motion.li key={link.name} variants={itemVariants}>
+                            {link.name === 'My Account' ? (
+                              <a
+                                href="#"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  if (isAuthenticated) navigate('/profile');
+                                  else navigate('/login');
+                                }}
+                                className="text-neutral-300 link-underline transition"
+                              >
+                                {link.name}
+                              </a>
+                            ) : (
+                              <a
+                                href={link.href}
+                                className="text-neutral-300 link-underline transition"
+                              >
+                                {link.name}
+                              </a>
+                            )}
+                          </motion.li>
+                        ))}
+                      </motion.ul>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Desktop static list */}
+              <ul className="hidden md:flex flex-col gap-2 md:mt-4">
+                {customerCare.map((link) => (
+                  <li key={link.name}>
+                    {link.name === 'My Account' ? (
+                      <a
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (isAuthenticated) navigate('/profile');
+                          else navigate('/login');
+                        }}
+                        className="text-neutral-300 link-underline transition"
+                      >
+                        {link.name}
+                      </a>
+                    ) : (
+                      <a
+                        href={link.href}
+                        className="text-neutral-300 link-underline transition"
+                      >
+                        {link.name}
+                      </a>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Divider between the two sections on mobile */}
+            <div className="w-full md:hidden border-t border-neutral-700" />
+
+            {/* Information (accordion on mobile) */}
+            <div className="w-full flex flex-col  p-5 md:p-0">
+              <button
+                type="button"
+                onClick={() => setInfoOpen((s) => !s)}
+                aria-expanded={infoOpen}
+                className="w-full flex items-center justify-between md:justify-start gap-3 md:cursor-default"
+              >
+                <h3 className="font-semibold text-white text-left">
+                  Information
+                </h3>
+                <ChevronDown
+                  className={`md:hidden transition-transform duration-200 ${infoOpen ? 'rotate-180' : 'rotate-0'}`}
+                  aria-hidden="true"
+                  size={18}
+                />
+              </button>
+
+              {/* Mobile animated wrapper + staggered items */}
+              <div className="md:hidden">
+                <AnimatePresence initial={false}>
+                  {infoOpen && (
+                    <motion.div
+                      key="info-wrap"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={
+                        shouldReduceMotion
+                          ? { duration: 0 }
+                          : { duration: 0.36, ease: [0.2, 0.9, 0.2, 1] }
+                      }
+                      style={{ overflow: 'hidden' }}
+                      aria-hidden={!infoOpen}
+                    >
+                      <motion.ul
+                        initial="closed"
+                        animate="open"
+                        exit="closed"
+                        variants={listVariants}
+                        className="flex flex-col gap-2 mt-4 md:mt-0"
+                      >
+                        {information.map((link) => (
+                          <motion.li key={link.name} variants={itemVariants}>
+                            <a
+                              href={link.href}
+                              className="text-neutral-300 link-underline transition"
+                            >
+                              {link.name}
+                            </a>
+                          </motion.li>
+                        ))}
+                      </motion.ul>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Desktop static list */}
+              <ul className="hidden md:flex flex-col gap-2 md:mt-4">
+                {information.map((link) => (
+                  <li key={link.name}>
+                    <a
+                      href={link.href}
+                      className="text-neutral-300 link-underline transition"
+                    >
+                      {link.name}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </nav>
+        </div>
+
+        {/* Vertical divider */}
+        <div className="hidden md:block w-px bg-neutral-700 mx-4" />
+
+        {/* Newsletter Form */}
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col justify-center  md:px-16 md:w-[50%]"
+        >
+          <h3 className="text-4xl uppercase font-bold mb-4">
+            Get our latest deals and discounts!
+          </h3>
+          <div className="flex bg-neutral-800 rounded-lg overflow-hidden hover:bg-neutral-700 transition relative">
+            <div className="relative flex-grow">
+              <input
+                id="newsletter-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder=" "
+                className="w-full p-3 bg-transparent text-neutral-200 outline-none transition duration-200 ease-in-out peer pt-4"
+                required
+              />
+              <label
+                htmlFor="newsletter-email"
+                className="absolute left-3 top-1 text-neutral-400 transition-all duration-200 ease-in-out pointer-events-none peer-placeholder-shown:top-3 peer-placeholder-shown:text-base peer-placeholder-shown:text-neutral-400 peer-focus:top-1 peer-focus:text-xs peer-focus:text-neutral-400 peer-[:not(:placeholder-shown)]:top-1 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-neutral-400"
+              >
+                Enter your email
+              </label>
+            </div>
+            <button
+              type="submit"
+              disabled={status === 'loading' || status === 'success'}
+              className={`p-2 m-2 rounded-full bg-white text-neutral-900 transition-all duration-300 ease-in-out cursor-pointer flex items-center justify-center
+                ${status !== 'idle' ? 'w-10 h-10 p-0' : ''}
+              `}
+              aria-label="Subscribe"
+            >
+              {status === 'loading' ? (
+                <svg
+                  className="animate-spin h-5 w-5 text-neutral-900"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8H4z"
+                  ></path>
+                </svg>
+              ) : status === 'success' ? (
+                <svg
+                  className="h-5 w-5 text-neutral-900"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="3"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              ) : (
+                <ArrowRight className="w-5 h-5 text-neutral-900" />
+              )}
+            </button>
+          </div>
+          <p className="mt-2 text-xs">
+            Become a ___ Insider!
+          </p>
+        </form>
+      </div>
+    </footer>
+  );
+}
