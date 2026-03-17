@@ -1,8 +1,12 @@
-# Hacktoberfest 2025 – Frontend
+# Ecommerce – Frontend
 
 <img align="right" src="https://media.giphy.com/media/du3J3cXyzhj75IOgvA/giphy.gif" width="100"/>
  
----
+ 
+ 
+ 
+ 
+ ---
 
 ## Welcome to online-store
 
